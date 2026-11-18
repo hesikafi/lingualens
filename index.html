@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LinguaLens — English writing coach that works offline</title>
+  <meta name="description" content="LinguaLens corrects your English instantly on-device (Gemini Nano) and coaches you deeply in the cloud (Gemini Flash). Built with Firebase AI Logic hybrid inference." />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="brand">
+        <h1>Lingua<span>Lens</span></h1>
+        <p>English writing coach — instant, private, works offline</p>
+      </div>
+      <div class="pills">
+        <span class="pill online" id="net-pill"><span class="dot"></span><span id="net-text">Online</span></span>
+        <span class="pill demo" id="ai-pill"><span class="dot"></span><span id="ai-text">Demo mode</span></span>
+      </div>
+    </div>
+  </header>
+
+  <div class="banner" id="demo-banner" hidden>
+    <div class="banner-inner">
+      <b>Demo mode.</b> No Firebase config yet — AI answers are local demos so you can try the whole app.
+      To enable real hybrid AI (on-device Gemini Nano + cloud Gemini Flash), paste your Firebase web config into
+      <code>src/firebase-config.ts</code>. See the README for the 5-minute setup.
+    </div>
+  </div>
+
+  <main>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="write" role="tab">✍️ Write</button>
+      <button class="tab" data-tab="review" role="tab">📝 Essay review</button>
+      <button class="tab" data-tab="practice" role="tab">💬 Practice chat</button>
+    </nav>
+
+    <!-- ============ WRITE ============ -->
+    <section class="panel active" id="panel-write">
+      <div class="card">
+        <h2>Write in English</h2>
+        <p class="sub">Type or paste a sentence or paragraph. Grammar correction, rewrites, vocabulary and translation run
+          <b>on-device</b> (Gemini Nano) when available — private, instant, and working even offline — with automatic cloud fallback.</p>
+        <label for="editor">Your text</label>
+        <textarea id="editor" placeholder="e.g. I goes to school yesterday and i learn english with my friend.">I goes to school yesterday and i learn english with my friend.</textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-correct">Check grammar</button>
+          <button class="btn" id="btn-rewrite-formal">Rewrite: formal</button>
+          <button class="btn" id="btn-rewrite-casual">Rewrite: casual</button>
+          <button class="btn" id="btn-rewrite-short">Rewrite: short</button>
+          <button class="btn" id="btn-vocab">Vocabulary</button>
+          <button class="btn" id="btn-translate">Translate to Indonesian</button>
+          <button class="btn ghost" id="btn-save-draft">💾 Save draft</button>
+        </div>
+        <p class="hint" id="device-status">On-device model: not initialised yet — it starts on your first check (needs a click, per the SDK).</p>
+        <div class="progress-bar" id="device-progress-wrap" hidden><div id="device-progress"></div></div>
+
+        <div class="result" id="correction-result" hidden>
+          <h3>Corrected text <span id="correction-badge"></span></h3>
+          <div class="result-box" id="corrected-text"></div>
+          <div class="row">
+            <button class="btn" id="btn-apply-correction">Use corrected text</button>
+            <button class="btn ghost" id="btn-speak-corrected">🔊 Read aloud</button>
+          </div>
+          <ul class="issues" id="issues-list"></ul>
+        </div>
+
+        <div class="result" id="rewrite-result" hidden>
+          <h3>Rewrite <span id="rewrite-badge"></span></h3>
+          <div class="result-box" id="rewrite-text"></div>
+          <div class="row">
+            <button class="btn" id="btn-apply-rewrite">Use this rewrite</button>
+            <button class="btn ghost" id="btn-speak-rewrite">🔊 Read aloud</button>
+          </div>
+        </div>
+
+        <div class="result" id="vocab-result" hidden>
+          <h3>Vocabulary <span id="vocab-badge"></span></h3>
+          <div class="vocab-grid" id="vocab-grid"></div>
+        </div>
+
+        <div class="result" id="translate-result" hidden>
+          <h3>Translation <span id="translate-badge"></span></h3>
+          <div class="result-box" id="translate-text"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ REVIEW ============ -->
+    <section class="panel" id="panel-review">
+      <div class="card">
+        <h2>Essay review</h2>
+        <p class="sub">Paste a full essay (100+ words is best). A cloud model (Gemini Flash) gives you a score, strengths,
+          things to improve, and a rewritten paragraph. This is the deep-coaching side of the hybrid — it needs the internet.</p>
+        <label for="essay">Your essay</label>
+        <textarea id="essay" placeholder="Paste your essay here…">Learning English is important for me because I want to study abroad. I goes to library every day and i read many books. English help me to communicate with people from other country. I think practice is the most important thing, but sometimes I feel shy to speak. My teacher say that mistakes is normal and we should not afraid. I will keep practice every day until I can speak fluently.</textarea>
+        <div class="row">
+          <button class="btn primary" id="btn-review">Review my essay</button>
+          <button class="btn ghost" id="btn-speak-review" disabled>🔊 Read review aloud</button>
+        </div>
+        <div class="result" id="review-result" hidden>
+          <h3>Review <span id="review-badge"></span></h3>
+          <div class="result-box" id="review-text"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PRACTICE ============ -->
+    <section class="panel" id="panel-practice">
+      <div class="card">
+        <h2>Practice conversation</h2>
+        <p class="sub">Chat with an AI English partner. It replies in simple English, gently corrects your mistakes,
+          and keeps asking questions. Tap 🔊 on any reply to hear the pronunciation.</p>
+        <div class="chat">
+          <div class="chat-log" id="chat-log">
+            <div class="msg model">Hi! I'm your English practice partner. What would you like to talk about today?</div>
+          </div>
+          <div class="chat-input">
+            <input type="text" id="chat-input" placeholder="Type in English… e.g. I like football" autocomplete="off" />
+            <button class="btn primary" id="btn-send-chat">Send</button>
+          </div>
+          <p class="hint">Tip: try making a small mistake on purpose — the coach will correct it kindly.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ PROGRESS + DRAFTS ============ -->
+    <div class="grid-2">
+      <div class="card">
+        <h2>Your progress</h2>
+        <p class="sub" id="progress-note">Saved on this device.</p>
+        <div class="stat-grid">
+          <div class="stat"><div class="num" id="stat-corrections">0</div><div class="lbl">corrections</div></div>
+          <div class="stat"><div class="num" id="stat-rewrites">0</div><div class="lbl">rewrites</div></div>
+          <div class="stat"><div class="num" id="stat-essays">0</div><div class="lbl">essays reviewed</div></div>
+          <div class="stat"><div class="num" id="stat-chats">0</div><div class="lbl">chat messages</div></div>
+          <div class="stat"><div class="num" id="stat-words">0</div><div class="lbl">words written</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Drafts</h2>
+        <p class="sub">Your saved texts. Click “Load” to put one back in the editor.</p>
+        <ul class="draft-list" id="draft-list">
+          <li class="empty">No drafts yet — write something and hit “Save draft”.</li>
+        </ul>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>LinguaLens — built for the Firebase #BuildHybridAI 2026 hackathon. AI runs on
+      <b>Firebase AI Logic hybrid inference</b>: on-device Gemini Nano (<code>PREFER_ON_DEVICE</code>) for instant,
+      private corrections; cloud Gemini Flash (<code>PREFER_IN_CLOUD</code>) for deep review and chat. Every result shows
+      where it was computed. Source: <code>src/ai.ts</code> — <code>getGenerativeModel</code> is called at runtime, not just named in the README.</p>
+  </footer>
+
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>
