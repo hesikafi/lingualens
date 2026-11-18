@@ -1,12 +1,12 @@
 // Firebase web app config — REAL config, from the Firebase console.
 // Project: lingualens (projectId lingualens-ee436), web app "lingualens-web".
 // Registered 19:39 WIB 18 Nov 2026. Gemini Developer API (free, no billing).
-// Note: the apiKey here is a client-side identifier, not a secret — Firebase
-// web apiKeys are meant to be embedded in web app code (restricted by the
-// console's API restrictions + App Check + security rules).
+// Note: the apiKey now comes from the VITE_FIREBASE_API_KEY env var
+// in a local .env file (never committed). Do not hard-code the key here.
+// The key is restricted by the console's API restrictions + App Check + security rules.
 
 export const firebaseConfig = {
-  apiKey: 'AIzaSyA-WR26CUvwN_MZGnTvYpQiJc1OP9XqP8U',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
   authDomain: 'lingualens-ee436.firebaseapp.com',
   projectId: 'lingualens-ee436',
   storageBucket: 'lingualens-ee436.firebasestorage.app',
