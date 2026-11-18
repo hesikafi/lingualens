@@ -6,7 +6,7 @@
 // console's API restrictions + App Check + security rules).
 
 export const firebaseConfig = {
-  apiKey: AIzaSyA-WR26CUvwN_MZGnTvYpQiJc1OP9XqP8U',
+  apiKey: 'AIzaSyA-WR26CUvwN_MZGnTvYpQiJc1OP9XqP8U',
   authDomain: 'lingualens-ee436.firebaseapp.com',
   projectId: 'lingualens-ee436',
   storageBucket: 'lingualens-ee436.firebasestorage.app',
