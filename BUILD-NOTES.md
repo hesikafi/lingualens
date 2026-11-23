@@ -60,6 +60,98 @@ terpasang + dites di Chrome desktop.
 - Probe: `/tmp/prompt-test/probe.mjs` (CDP, recipe webgl-policy `hatch-webgl-all-origins-v1`,
   sha256 `8097045f…`).
 
+## Improvements #2–#5 (23 Nov 2026, dari konsultasi Gemini Neon)
+
+Dibangun dari `GEMINI-IMPROVE-2026-11-23.md`. Routing AI, prompt, dan Firebase
+config TIDAK diubah. Tidak ada fitur AI baru, login, service worker, atau
+refactor UI. Build lokal + verifikasi saja — TIDAK push GitHub, TIDAK deploy,
+TIDAK sentuh video demo.
+
+### #2 Hybrid Telemetry Strip — DONE
+- `index.html`: strip `<p id="telemetry-strip">` di bawah status model di tab
+  Write; tampil sejak awal (`Session · 0 On-device · 0 KB sent · $0 · 0 Cloud`).
+- `src/main.ts`: `telemetry` state + `recordTelemetry(source, ms)` +
+  `renderTelemetry()`; setiap panggilan AI (grammar, rewrite, vocab,
+  translate, essay review, chat) diukur dengan `performance.now()` dan
+  dicatat; `badge(source, ms)` menampilkan latensi per hasil
+  (mis. `On-device · Gemini Nano · 320 ms`).
+- `src/style.css`: `.telemetry` (kotak kecil, tidak mencolok).
+- Verifikasi: `window.__lingualensTelemetry('on_device', 320)` +
+  `('in_cloud', 1900)` → strip: `Session · 1 On-device · 0 KB sent · $0 ·
+  1 Cloud — last: 320 ms on-device / 1.9 s cloud`. `npm run build` lolos.
+
+### #3 1-Click Sample Drafts — DONE
+- `index.html`: baris `Try a sample:` di bawah editor (3 tombol:
+  Learner essay, Casual email, IELTS paragraph).
+- `src/main.ts`: `SAMPLES` (esai pelajar dgn kesalahan tense/preposition,
+  email kasual→formal, paragraf IELTS) — 1 klik memuat teks ke editor.
+- Verifikasi: ketiga tombol diklik via CDP, editor terisi teks yang benar.
+  `npm run build` lolos.
+
+### #4 Inline Visual Diff + offline guard — DONE
+- `src/main.ts`: `wordDiffHtml(original, corrected)` — diff kata berbasis LCS
+  (cap 2000 token, fallback teks biasa); kata dihapus → `<del>` merah
+  coret, kata ditambah → `<ins>` hijau. Dipakai di hasil grammar
+  (`#corrected-text`) dan rewrite (`#rewrite-text`); tombol "Use corrected
+  text" tetap memakai string `result.corrected` asli.
+- `src/style.css`: `.result-box del/ins`.
+- Offline guard: `updateCloudButtons()` — saat `navigator.onLine === false`,
+  tombol Essay Review + Send chat dinonaktifkan + hint tampil
+  (`#review-offline-hint`: "Butuh koneksi — gunakan alat On-device di bawah
+  sambil offline."; `#chat-offline-hint` analog); handler review/chat juga
+  early-return saat offline; `setBusy()` tidak bisa mengaktifkan kembali
+  tombol saat offline (finally memanggil `updateCloudButtons()`).
+- Verifikasi: diff `I goes to school yesterday` → `I went…` me-render
+  `I <del>goes</del><ins>went</ins> to school yesterday`. Guard dites
+  dengan CDP `Network.emulateNetworkConditions` offline ASLI
+  (`/tmp/ll-offline-test.mjs`): offline → kedua tombol disabled, kedua hint
+  tampil, pill "Offline — on-device still works", klik tombol review tidak
+  menghasilkan apa-apa; kembali online → tombol aktif lagi, hint hilang.
+  `npm run build` lolos.
+
+### #5 Auto-Sync offline → Firestore + badge status — DONE (dengan batasan VM)
+- `src/firebase-app.ts`: `getFirestore()` → `initializeFirestore(app,
+  { localCache: persistentLocalCache() })` (fallback ke `getFirestore`
+  bila cache persisten tidak tersedia).
+- `src/store.ts`: `Store.syncPending()` — upload draf localStorage yang
+  ber-id `d-…` ke Firestore, hapus dari localStorage yang sudah naik,
+  `reconcileProgress()` gabung progres (max per field) Firestore ↔ lokal.
+  Dipanggil sekali saat init + tiap event `online`. Status dilaporkan via
+  `onSyncStatus`: `synced` / `syncing` / `local` / `offline`.
+  Semua langkah jaringan dibatasi timeout (`withTimeout`: upload 15 dtk,
+  baca progres 8 dtk) — jaringan mati tidak bisa menggantung sync;
+  kegagalan menyimpan salinan lokal (tidak ada data hilang, tidak ada
+  status sukses palsu).
+- `src/main.ts` + `index.html`: badge `#sync-status` di kartu progress
+  ("Tersinkron ke Firestore." / "Menyinkronkan…" / "Tersimpan lokal
+  (belum tersinkron)." / "Offline — tersimpan di perangkat ini.").
+- Verifikasi (VM): `npm run build` lolos; `syncPending()` dipanggil dengan
+  draf lokal `d-999` + uid injeksi → selesai dalam ~27 dtk (tanpa hang),
+  draf TETAP di localStorage, status jujur "Tersimpan lokal (belum
+  tersinkron)." — karena VM tidak bisa mencapai Google (SSL error), tulis
+  Firestore tidak pernah resolve dari cache lokal dalam 15 dtk. Timeout
+  bekerja sesuai desain. **Upload ke server Firestore yang sebenarnya
+  BELUM terverifikasi dari VM** — butuh jaringan ke Google (Chrome desktop
+  Mafie / setelah deploy).
+- Catatan: bila timeout terjadi SETELAH server menerima tulis tapi sebelum
+  promise resolve, draf bisa terduplikasi saat retry berikutnya (judul +
+  teks sama, dua baris). Risiko kecil; tidak ditangani di ronde ini.
+
+### Test hooks (pola sama seperti `__lingualensReady`)
+- `window.__lingualensTelemetry`, `__lingualensDiff`, `__lingualensStore`,
+  `__lingualensFirebase` — hanya untuk tes otomatis, tidak dipakai UI.
+
+### Verifikasi akhir (23 Nov 2026, semua setelah perubahan terakhir)
+- `npm run build` lolos (tsc + Vite, bundle 768 KB / 191 KB gzip).
+- Tes CDP gabungan (`tools/test.mjs` + interact): APP READY; strip, sample,
+  diff, badge sync, tombol review online — semua sesuai harapan.
+- Console: hanya 2 warning yang SUDAH ADA sebelum perubahan ini (App Check
+  token fetch + anonymous sign-in gagal — VM tidak bisa mencapai Google).
+  Tidak ada console error baru, tidak ada exception dari kode baru.
+- `gitleaks detect --no-git` pada 5 file yang diubah (`src/main.ts`,
+  `src/store.ts`, `src/firebase-app.ts`, `src/style.css`, `index.html`):
+  **no leaks found** di semuanya. Tidak ada secret yang ditambahkan.
+
 ## Yang masih menunggu Mafie
 
 1. **Firebase config** — buat project di console.firebase.google.com (akun dia), enable AI

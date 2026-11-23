@@ -43,6 +43,12 @@
           <b>on-device</b> (Gemini Nano) when available — private, instant, and working even offline — with automatic cloud fallback.</p>
         <label for="editor">Your text</label>
         <textarea id="editor" placeholder="e.g. I goes to school yesterday and i learn english with my friend.">I goes to school yesterday and i learn english with my friend.</textarea>
+        <div class="row samples">
+          <span class="samples-label">Try a sample:</span>
+          <button class="btn ghost sample" data-sample="essay">Learner essay</button>
+          <button class="btn ghost sample" data-sample="email">Casual email</button>
+          <button class="btn ghost sample" data-sample="ielts">IELTS paragraph</button>
+        </div>
         <div class="row">
           <button class="btn primary" id="btn-correct">Check grammar</button>
           <button class="btn" id="btn-rewrite-formal">Rewrite: formal</button>
@@ -54,6 +60,7 @@
         </div>
         <p class="hint" id="device-status">On-device model: not initialised yet — it starts on your first check (needs a click, per the SDK).</p>
         <div class="progress-bar" id="device-progress-wrap" hidden><div id="device-progress"></div></div>
+        <p class="telemetry" id="telemetry-strip">Session · <b>0</b> On-device · 0 KB sent · $0 · <b>0</b> Cloud</p>
 
         <div class="result" id="correction-result" hidden>
           <h3>Corrected text <span id="correction-badge"></span></h3>
@@ -98,6 +105,7 @@
           <button class="btn primary" id="btn-review">Review my essay</button>
           <button class="btn ghost" id="btn-speak-review" disabled>🔊 Read review aloud</button>
         </div>
+        <p class="hint offline-hint" id="review-offline-hint" hidden>Butuh koneksi — gunakan alat On-device di bawah sambil offline.</p>
         <div class="result" id="review-result" hidden>
           <h3>Review <span id="review-badge"></span></h3>
           <div class="result-box" id="review-text"></div>
@@ -119,6 +127,7 @@
             <input type="text" id="chat-input" placeholder="Type in English… e.g. I like football" autocomplete="off" />
             <button class="btn primary" id="btn-send-chat">Send</button>
           </div>
+          <p class="hint offline-hint" id="chat-offline-hint" hidden>Butuh koneksi internet untuk chat — alat On-device di tab Write tetap jalan offline.</p>
           <p class="hint">Tip: try making a small mistake on purpose — the coach will correct it kindly.</p>
         </div>
       </div>
@@ -129,6 +138,7 @@
       <div class="card">
         <h2>Your progress</h2>
         <p class="sub" id="progress-note">Saved on this device.</p>
+        <p class="hint" id="sync-status">Saved on this device.</p>
         <div class="stat-grid">
           <div class="stat"><div class="num" id="stat-corrections">0</div><div class="lbl">corrections</div></div>
           <div class="stat"><div class="num" id="stat-rewrites">0</div><div class="lbl">rewrites</div></div>
