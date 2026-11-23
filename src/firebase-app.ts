@@ -5,7 +5,12 @@
 import { initializeApp, type FirebaseApp } from 'firebase/app';
 import { initializeAppCheck, ReCaptchaEnterpriseProvider, CustomProvider } from 'firebase/app-check';
 import { getAuth, signInAnonymously, type Auth, type User } from 'firebase/auth';
-import { getFirestore, type Firestore } from 'firebase/firestore';
+import {
+  getFirestore,
+  initializeFirestore,
+  persistentLocalCache,
+  type Firestore,
+} from 'firebase/firestore';
 import { firebaseConfig, isFirebaseConfigured, appCheckDebugToken } from './firebase-config';
 
 export interface FirebaseServices {
@@ -52,7 +57,15 @@ export async function initFirebase(): Promise<FirebaseServices> {
   void ReCaptchaEnterpriseProvider;
 
   const auth = getAuth(app);
-  const db = getFirestore(app);
+  // Persistent local cache: Firestore reads/writes keep working offline and
+  // sync automatically when the connection returns (drafts + progress).
+  let db: Firestore;
+  try {
+    db = initializeFirestore(app, { localCache: persistentLocalCache() });
+  } catch (e) {
+    console.warn('[LinguaLens] Persistent cache unavailable, using default Firestore:', e);
+    db = getFirestore(app);
+  }
   let user: User | null = null;
   try {
     const cred = await signInAnonymously(auth);

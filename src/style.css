@@ -100,6 +100,12 @@ textarea { min-height: 150px; font-size: 15px; line-height: 1.6; }
 .btn:disabled { opacity: 0.55; cursor: wait; }
 .btn.ghost { background: transparent; }
 .hint { font-size: 12.5px; color: var(--muted); margin-top: 8px; }
+.hint.offline-hint { color: var(--amber); font-weight: 600; }
+.result-box del { color: #dc2626; background: #fee2e2; text-decoration: line-through; }
+.result-box ins { color: var(--green); background: var(--green-soft); text-decoration: none; }
+.telemetry { font-size: 12.5px; color: var(--muted); margin: 8px 0 0; background: var(--surface-muted); border: 1px solid var(--border); border-radius: 8px; padding: 7px 10px; }
+.telemetry b { color: var(--text); }
+.samples-label { font-size: 13px; color: var(--muted); font-weight: 600; }
 
 .badge {
   display: inline-flex; align-items: center; gap: 6px;

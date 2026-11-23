@@ -6,7 +6,7 @@
 // The key is restricted by the console's API restrictions + App Check + security rules.
 
 export const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
   authDomain: 'lingualens-ee436.firebaseapp.com',
   projectId: 'lingualens-ee436',
   storageBucket: 'lingualens-ee436.firebasestorage.app',
